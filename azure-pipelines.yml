@@ -1,0 +1,88 @@
+trigger:
+  branches:
+    include:
+      - main
+      - develop
+
+pr:
+  branches:
+    include:
+      - main
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  PYTHON_VERSION: '3.10'
+
+stages:
+
+- stage: Test
+  displayName: 'Run Tests'
+  jobs:
+  - job: UnitTests
+    displayName: 'Unit Tests + Quality Checks'
+    steps:
+
+    - task: UsePythonVersion@0
+      inputs:
+        versionSpec: '$(PYTHON_VERSION)'
+      displayName: 'Set Python version'
+
+    - script: |
+        pip install --upgrade pip
+        pip install pandas faker requests python-dotenv pytest pyarrow
+      displayName: 'Install lightweight dependencies'
+
+    - script: |
+        python data/mock/generate_mock_data.py
+      displayName: 'Generate mock data'
+
+    - script: |
+        python ingestion/swift_mt940_parser.py
+      displayName: 'Smoke test: SWIFT parser'
+
+    - script: |
+        python ingestion/reconciliation_engine.py
+      displayName: 'Smoke test: Reconciliation engine'
+
+    - script: |
+        python transforms/basel_capital_calculator.py
+      displayName: 'Smoke test: Basel CAR calculator'
+
+    - script: |
+        python transforms/data_quality_scorer.py
+      displayName: 'Smoke test: Data quality scorer'
+
+    - script: |
+        python ingestion/cbs_api_connector.py
+      displayName: 'Smoke test: CBS connector (mock mode)'
+
+    - script: |
+        python -m pytest tests/ -v --tb=short
+      displayName: 'Run pytest suite'
+
+    - task: PublishTestResults@2
+      inputs:
+        testResultsFormat: 'JUnit'
+        testResultsFiles: '**/test-results.xml'
+      condition: always()
+      displayName: 'Publish test results'
+
+- stage: Lint
+  displayName: 'Code Quality'
+  dependsOn: Test
+  condition: succeeded()
+  jobs:
+  - job: Lint
+    steps:
+    - task: UsePythonVersion@0
+      inputs:
+        versionSpec: '$(PYTHON_VERSION)'
+
+    - script: pip install flake8
+      displayName: 'Install flake8'
+
+    - script: |
+        flake8 ingestion/ transforms/ reporting/ --max-line-length=120 --exclude=__pycache__
+      displayName: 'Lint Python files'

@@ -1,0 +1,46 @@
+# =============================================================================
+# Real-Time Banking Regulatory Reporting & Reconciliation Platform
+# Install all:        pip install -r requirements.txt
+# Install dev only:   pip install pandas faker requests python-dotenv pytest
+# =============================================================================
+
+# ── Core Data ─────────────────────────────────────────────────────────────────
+pandas==2.2.2
+pyarrow==15.0.2
+numpy==1.26.4
+
+# ── Spark + Delta Lake ────────────────────────────────────────────────────────
+# NOTE: pyspark and delta-spark versions must match — see table below
+# PySpark 3.5.x → delta-spark 3.2.0
+# PySpark 3.4.x → delta-spark 2.4.0
+# PySpark 3.3.x → delta-spark 2.3.0
+pyspark==3.5.1
+delta-spark==3.2.0
+
+# ── Orchestration ─────────────────────────────────────────────────────────────
+# Airflow is run via Docker (airflow-local/docker-compose.yaml)
+# Only install below if running Airflow directly (non-Docker)
+# apache-airflow==2.8.4
+
+# ── Azure ─────────────────────────────────────────────────────────────────────
+azure-eventhub==5.11.6
+azure-storage-file-datalake==12.15.0
+azure-identity==1.15.0
+
+# ── Databricks ────────────────────────────────────────────────────────────────
+databricks-sql-connector==3.1.0
+
+# ── Data Quality ──────────────────────────────────────────────────────────────
+great-expectations==0.18.15
+
+# ── Utilities ─────────────────────────────────────────────────────────────────
+requests==2.31.0
+faker==24.0.0
+python-dotenv==1.0.1
+
+# ── Testing ───────────────────────────────────────────────────────────────────
+pytest==8.1.1
+pytest-cov==5.0.0
+
+# ── Linting (CI only) ─────────────────────────────────────────────────────────
+flake8==7.0.0
